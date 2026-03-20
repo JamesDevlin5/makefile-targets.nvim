@@ -1,0 +1,27 @@
+name: Lint
+
+on:
+  push:
+    paths:
+      - "**.lua"
+      - "stylua.toml"
+      - ".github/workflows/lint.yml"
+  pull_request:
+    paths:
+      - "**.lua"
+      - "stylua.toml"
+      - ".github/workflows/lint.yml"
+
+jobs:
+  stylua:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run StyLua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --config-path stylua.toml --check .
