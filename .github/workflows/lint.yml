@@ -22,7 +22,7 @@ jobs:
     name: Check Lua formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run StyLua
         uses: JohnnyMorganz/stylua-action@v4
@@ -35,7 +35,7 @@ jobs:
     name: Check JSON formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run JSON format check
         run: |
