@@ -6,6 +6,8 @@ M.config = {
     keymap = "<Leader>m",
     -- Makefile location (relative to cwd)
     makefile_name = "Makefile",
+    -- Order in which root finders are tried. Available: "lsp", "git", "buffer", "cwd"
+    finders = { "lsp", "git", "buffer", "cwd" },
 }
 
 --- Setup Function

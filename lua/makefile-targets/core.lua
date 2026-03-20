@@ -8,30 +8,47 @@ local function notify(msg, level)
 end
 
 --- Resolve a starting directory for the Makefile search.
+local finders = {
+    lsp = function()
+        local clients = vim.lsp.get_clients({ bufnr = 0 })
+        if #clients > 0 then
+            return clients[1].config.root_dir
+        end
+    end,
+
+    git = function()
+        local result = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+        if vim.v.shell_error == 0 and result and result ~= "" then
+            return result
+        end
+    end,
+
+    buffer = function()
+        local bufpath = vim.api.nvim_buf_get_name(0)
+        if bufpath ~= "" then
+            return vim.fn.fnamemodify(bufpath, ":h")
+        end
+    end,
+
+    cwd = function()
+        return vim.fn.getcwd()
+    end,
+}
+--- Try each finder, returning the first non-nil result.
 ---@return string
 local function get_search_root()
-    -- Start with LSP
-    local clients = vim.lsp.get_clients({ bufnr = 0 })
-    if #clients > 0 then
-        local root = clients[1].config.root_dir
-        if root then
-            return root
+    local config = require("makefile-targets").config
+    for _, name in ipairs(config.finders) do
+        local finder = finders[name]
+        if not finder then
+            notify("Unknown finder: " .. name, vim.log.levels.WARN)
+        else
+            local root = finder()
+            if root then
+                return root
+            end
         end
     end
-
-    -- Fall back to git repo root
-    local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
-    if vim.v.shell_error == 0 and git_root and git_root ~= "" then
-        return git_root
-    end
-
-    -- Fall back to the directory of the current file
-    local bufpath = vim.api.nvim_buf_get_name(0)
-    if bufpath ~= "" then
-        return vim.fn.fnamemodify(bufpath, ":h")
-    end
-
-    -- Fall back to vim cwd
     return vim.fn.getcwd()
 end
 
