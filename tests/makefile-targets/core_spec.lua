@@ -9,14 +9,11 @@ local assert = require("luassert")
 ---@return string dir
 local function write_tmp(filename, contents)
     local dir = vim.fn.tempname() -- unique temp dir path
-    vim.fn.mkdir(dir, "p")
+    vim.fn.mkdir(dir, "pF")
     local path = dir .. "/" .. filename
     vim.fn.writefile(vim.split(contents, "\n"), path)
     return path, dir
 end
-
--- Give the plugin a default config so core.lua can require("makefile-targets").config
-require("makefile-targets").setup({})
 
 describe("parse_targets (via pick_target smoke path)", function()
     local captured
@@ -25,6 +22,9 @@ describe("parse_targets (via pick_target smoke path)", function()
     before_each(function()
         captured = nil
         notified = {}
+        package.loaded["makefile-targets"] = nil
+        package.loaded["makefile-targets.core"] = nil
+        require("makefile-targets").setup({ finders = { "buffer" } })
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.ui.select = function(items, _, _)
             captured = items
@@ -33,6 +33,11 @@ describe("parse_targets (via pick_target smoke path)", function()
         vim.notify = function(msg, _)
             table.insert(notified, msg)
         end
+    end)
+
+    after_each(function()
+        vim.ui.select = nil
+        vim.notify = nil
     end)
 
     it("finds simple targets in a Makefile", function()
@@ -85,7 +90,7 @@ describe("parse_targets (via pick_target smoke path)", function()
 
     it("warns and returns early when no Makefile is found", function()
         local empty_dir = vim.fn.tempname()
-        vim.fn.mkdir(empty_dir, "p")
+        vim.fn.mkdir(empty_dir, "pF")
 
         require("makefile-targets").config.makefile_name = "Makefile"
         vim.api.nvim_buf_set_name(0, empty_dir .. "/fake.c")
