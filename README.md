@@ -8,9 +8,7 @@ Pick and run `make` targets.
 ```lua
 {
   "JamesDevlin5/makefile-targets.nvim",
-  config = function()
-    require("makefile-targets").setup()
-  end,
+  opts = {},
 }
 ```
 
@@ -27,8 +25,9 @@ Selecting a target runs `make <target>`.
 
 ```lua
 require("makefile-targets").setup({
-  keymap        = "<leader>m",  -- false to disable
-  makefile_name = "Makefile",   -- looked up relative to cwd
+  keymap        = "<leader>m",                       -- false to disable
+  makefile_name = "Makefile",                        -- looked up relative to cwd
+  finders       = { "lsp", "git", "buffer", "cwd" }, -- Order in which root finders are tried
 })
 ```
 
