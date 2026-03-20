@@ -7,18 +7,59 @@ local function notify(msg, level)
     vim.notify("makefile-targets: " .. msg, level)
 end
 
+--- Resolve a starting directory for the Makefile search.
+--- Prefers the LSP root_dir of any active client for the current buffer,
+--- falling back to the directory of the current file, then cwd.
+---@return string
+local function get_search_root()
+    local clients = vim.lsp.get_clients({ bufnr = 0 })
+    if #clients > 0 then
+        local root = clients[1].config.root_dir
+        if root then
+            return root
+        end
+    end
+
+    -- Fall back to the directory of the current file
+    local bufpath = vim.api.nvim_buf_get_name(0)
+    if bufpath ~= "" then
+        return vim.fn.fnamemodify(bufpath, ":h")
+    end
+
+    return vim.fn.getcwd()
+end
+
+--- Search for a Makefile by walking upward from start_dir.
+--- Returns the full path if found, or nil.
+---@param start_dir string
+---@param filename string
+---@return string|nil
+local function find_makefile(start_dir, filename)
+    local results = vim.fs.find(filename, {
+        upward = true,
+        path = start_dir,
+        type = "file",
+        limit = 1,
+    })
+    return results[1]
+end
+
 --- Find and parse targets from a Makefile.
 --- A target line looks like:  `my-target:` or `my-target: dep1 dep2`
 --- Lines starting with `.` (like .PHONY) are excluded.
----@return string[] List of target names (empty if none found)
+---@return string[] List of target names, or empty list if none found
 local function parse_targets()
-	local config = require("makefile-targets").config
-	local path = vim.fn.getcwd() .. "/" .. config.makefile_name
+    local config = require("makefile-targets").config
+    local root = get_search_root()
+    local path = find_makefile(root, config.makefile_name)
 
-	if vim.fn.filereadable(path) == 0 then
-		notify("No Makefile found at " .. path, vim.log.levels.WARN)
-		return {}
-	end
+    if not path then
+        notify(
+            "No " .. config.makefile_name .. " found (searched upward from " .. root .. ")",
+            vim.log.levels.WARN
+        )
+        return {}
+    end
 
 	local targets = {}
 	for _, line in ipairs(vim.fn.readfile(path)) do
