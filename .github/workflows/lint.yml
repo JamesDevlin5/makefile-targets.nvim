@@ -15,6 +15,7 @@ on:
       - ".releaserc"
       - "stylua.toml"
       - ".github/workflows/lint.yml"
+  workflow_dispatch:
 
 jobs:
   stylua:
