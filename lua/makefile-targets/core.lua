@@ -61,44 +61,44 @@ local function parse_targets()
         return {}
     end
 
-	local targets = {}
-	for _, line in ipairs(vim.fn.readfile(path)) do
-		-- Match lines like "target-name:" that don't start with a tab or dot
-		local target = line:match("^([%w][%w%-_]*):")
-		if target then
-			table.insert(targets, target)
-		end
-	end
+    local targets = {}
+    for _, line in ipairs(vim.fn.readfile(path)) do
+        -- Match lines like "target-name:" that don't start with a tab or dot
+        local target = line:match("^([%w][%w%-_]*):")
+        if target then
+            table.insert(targets, target)
+        end
+    end
 
-	return targets
+    return targets
 end
 
 --- Run a Makefile target in a terminal split.
 ---@param target string The target name to run
 local function run_target(target)
-	vim.cmd("botright new")
+    vim.cmd("botright new")
     vim.fn.jobstart("make " .. target, { term = true })
-	vim.api.nvim_buf_set_name(0, "make:" .. target)
-	vim.cmd("startinsert")
+    vim.api.nvim_buf_set_name(0, "make:" .. target)
+    vim.cmd("startinsert")
 end
 
 --- Open a picker showing available Makefile targets.
 --- Selecting one runs it via `make <target>` in a terminal split.
 function M.pick_target()
-	local targets = parse_targets()
+    local targets = parse_targets()
 
-	if #targets == 0 then
-		notify("No targets found", vim.log.levels.INFO)
-		return
-	end
+    if #targets == 0 then
+        notify("No targets found", vim.log.levels.INFO)
+        return
+    end
 
-	vim.ui.select(targets, {
-		prompt = "Make target:",
-	}, function(choice)
-		if choice then
-			run_target(choice)
-		end
-	end)
+    vim.ui.select(targets, {
+        prompt = "Make target:",
+    }, function(choice)
+        if choice then
+            run_target(choice)
+        end
+    end)
 end
 
 return M
