@@ -1,0 +1,26 @@
+# Neovim
+doc/tags
+
+# Luarocks / dependency management
+*.rock
+*.rockspec
+luarocks/
+
+# Testing (plenary.nvim)
+test-results/
+.tests/
+
+# Lua language server artifacts
+.luarc.json
+.lua-format
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

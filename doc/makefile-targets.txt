@@ -1,0 +1,37 @@
+*makefile-targets.txt*   Pick and run Makefile targets from inside Neovim
+
+==============================================================================
+INTRODUCTION                                        *makefile-targets*
+
+makefile-targets.nvim lets you fuzzy-pick any target from your project's
+Makefile and run it in a terminal split.
+
+==============================================================================
+SETUP                                               *makefile-targets-setup*
+
+Call `setup()` somewhere in your Neovim config: >lua
+
+  require("makefile-targets").setup({
+    keymap       = "<leader>m",   -- set to false to disable
+    makefile_name = "Makefile",   -- filename to look for
+  })
+<
+
+==============================================================================
+COMMANDS                                            *makefile-targets-commands*
+
+:MakefileTargets                                    *:MakefileTargets*
+    Open the target picker. Available even without calling setup().
+
+==============================================================================
+CONFIGURATION                                       *makefile-targets-config*
+
+All options and their defaults:
+
+  keymap          "<leader>m"     Normal-mode keymap for the picker.
+                                  Set to `false` to skip registering one.
+
+  makefile_name   "Makefile"      Filename searched for in the cwd.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
