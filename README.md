@@ -8,6 +8,7 @@ Pick and run `make` targets.
 ```lua
 {
   "JamesDevlin5/makefile-targets.nvim",
+  ---@type MakefileTargetsOpts
   opts = {},
 }
 ```

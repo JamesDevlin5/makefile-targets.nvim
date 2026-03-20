@@ -1,5 +1,10 @@
 local M = {}
 
+---@class MakefileTargetsOpts
+---@field keymap string|false Normal-mode keymap for the picker, or false to disable
+---@field makefile_name string Filename to search for
+---@field finders string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
+
 --- Default Config
 M.config = {
     -- Triggers the picker (set to false to disable)
