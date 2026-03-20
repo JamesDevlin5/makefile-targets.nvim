@@ -12,8 +12,9 @@ SETUP                                               *makefile-targets-setup*
 Call `setup()` somewhere in your Neovim config: >lua
 
   require("makefile-targets").setup({
-    keymap       = "<leader>m",   -- set to false to disable
-    makefile_name = "Makefile",   -- filename to look for
+    keymap        = "<Leader>m",
+    makefile_name = "Makefile",
+    finders       = { "lsp", "git", "buffer", "cwd" },
   })
 <
 
@@ -28,10 +29,32 @@ CONFIGURATION                                       *makefile-targets-config*
 
 All options and their defaults:
 
-  keymap          "<leader>m"     Normal-mode keymap for the picker.
-                                  Set to `false` to skip registering one.
+  keymap          "<Leader>m"               Normal-mode keymap for the picker.
+                                            Set to `false` to skip registering
+                                            one.
 
-  makefile_name   "Makefile"      Filename searched for in the cwd.
+  makefile_name   "Makefile"                Filename to search for, walked
+                                            upward from the resolved root.
+
+  finders         { "lsp", "git",           Ordered list of strategies used to
+                    "buffer", "cwd" }        resolve the project root. Each is
+                                            tried in turn; the first to return
+                                            a path wins.
+
+                                            Available finders:
+                                            - "lsp"    root_dir of the first
+                                                       active LSP client
+                                            - "git"    git repository root
+                                            - "buffer" directory of the
+                                                       current file
+                                            - "cwd"    Neovim's working dir
+
+                                            Omit entries to disable finders,
+                                            or reorder to change priority: >lua
+  require("makefile-targets").setup({
+    finders = { "git", "buffer" },
+  })
+<
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
