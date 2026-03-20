@@ -70,7 +70,8 @@ end
 --- Find and parse targets from a Makefile.
 --- A target line looks like:  `my-target:` or `my-target: dep1 dep2`
 --- Lines starting with `.` (like .PHONY) are excluded.
----@return string[] List of target names, or empty list if none found
+---@return string[] targets
+---@return string|nil dir Directory containing the Makefile, or nil if not found
 local function parse_targets()
     local config = require("makefile-targets").config
     local root = get_search_root()
@@ -81,7 +82,7 @@ local function parse_targets()
             "No " .. config.makefile_name .. " found (searched upward from " .. root .. ")",
             vim.log.levels.WARN
         )
-        return {}
+        return {}, nil
     end
 
     local targets = {}
@@ -93,14 +94,15 @@ local function parse_targets()
         end
     end
 
-    return targets
+    return targets, vim.fn.fnamemodify(path, ":h")
 end
 
 --- Run a Makefile target in a terminal split.
 ---@param target string The target name to run
-local function run_target(target)
+---@param dir string The directory containing the Makefile
+local function run_target(target, dir)
     vim.cmd("botright new")
-    vim.fn.jobstart("make " .. target, { term = true })
+    vim.fn.jobstart("make " .. target, { term = true, cwd = dir })
     vim.api.nvim_buf_set_name(0, "make:" .. target)
     vim.cmd("startinsert")
 end
@@ -108,7 +110,7 @@ end
 --- Open a picker showing available Makefile targets.
 --- Selecting one runs it via `make <target>` in a terminal split.
 function M.pick_target()
-    local targets = parse_targets()
+    local targets, dir = parse_targets()
 
     if #targets == 0 then
         notify("No targets found", vim.log.levels.INFO)
@@ -119,7 +121,8 @@ function M.pick_target()
         prompt = "Make target:",
     }, function(choice)
         if choice then
-            run_target(choice)
+            assert(dir, "makefile-targets: dir should not be nil when targets were found")
+            run_target(choice, dir)
         end
     end)
 end
