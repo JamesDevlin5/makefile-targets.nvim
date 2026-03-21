@@ -257,6 +257,30 @@ describe("target descriptions", function()
         assert.are.equal("build - Build the project", captured_format_item(build))
     end)
 
+    it("joins multiple consecutive ## lines into a single description", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "## Build the project",
+                "## Compiles all source files",
+                "## and links the output binary",
+                "build: src/main.c",
+                "\tgcc -o build src/main.c",
+            }, "\n")
+        )
+
+        require("makefile-targets").config.makefile_name = "Makefile"
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local build = find_target(captured, "build")
+        assert.is_not_nil(build)
+        assert.are.equal(
+            "Build the project Compiles all source files and links the output binary",
+            build and build.desc
+        )
+    end)
+
     it("format_item shows only target name when desc is nil", function()
         local _, dir = write_tmp(
             "Makefile",
