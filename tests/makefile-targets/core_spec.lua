@@ -124,6 +124,108 @@ describe("parse_targets (via pick_target smoke path)", function()
     end)
 end)
 
+describe("exclude config", function()
+    local captured
+    local notified
+
+    before_each(function()
+        captured = nil
+        notified = {}
+        package.loaded["makefile-targets"] = nil
+        package.loaded["makefile-targets.core"] = nil
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, _)
+            captured = items
+        end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.notify = function(msg, _)
+            table.insert(notified, msg)
+        end
+    end)
+
+    after_each(function()
+        vim.ui.select = nil
+        vim.notify = nil
+    end)
+
+    it("hides excluded targets from the picker", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "build:",
+                "\tgcc -o build src/main.c",
+                "clean:",
+                "\trm -f build",
+                "test:",
+                "\t./build --test",
+            }, "\n")
+        )
+
+        require("makefile-targets").setup({ finders = { "buffer" }, exclude = { "clean" } })
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local ns = targets(captured)
+        assert.is_false(vim.tbl_contains(ns, "clean"))
+        assert.is_truthy(vim.tbl_contains(ns, "build"))
+        assert.is_truthy(vim.tbl_contains(ns, "test"))
+    end)
+
+    it("hides multiple excluded targets", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "build:",
+                "\tgcc -o build src/main.c",
+                "clean:",
+                "\trm -f build",
+                "test:",
+                "\t./build --test",
+            }, "\n")
+        )
+
+        require("makefile-targets").setup({ finders = { "buffer" }, exclude = { "clean", "test" } })
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local ns = targets(captured)
+        assert.is_false(vim.tbl_contains(ns, "clean"))
+        assert.is_false(vim.tbl_contains(ns, "test"))
+        assert.is_truthy(vim.tbl_contains(ns, "build"))
+    end)
+
+    it("shows all targets when exclude is empty", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "build:",
+                "\tgcc -o build src/main.c",
+                "clean:",
+                "\trm -f build",
+            }, "\n")
+        )
+
+        require("makefile-targets").setup({ finders = { "buffer" }, exclude = {} })
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local ns = targets(captured)
+        assert.is_truthy(vim.tbl_contains(ns, "build"))
+        assert.is_truthy(vim.tbl_contains(ns, "clean"))
+    end)
+
+    it("notifies when all targets are excluded", function()
+        local _, dir = write_tmp("Makefile", "build:\n\techo build\n")
+
+        require("makefile-targets").setup({ finders = { "buffer" }, exclude = { "build" } })
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        assert.is_true(#notified > 0)
+        assert.is_nil(captured)
+    end)
+end)
+
 describe("target descriptions", function()
     local captured
     local captured_format_item

@@ -130,6 +130,14 @@ local function parse_targets()
         end
     end
 
+    -- Filter out excluded targets
+    local excluded = vim.tbl_map(function(e)
+        return e
+    end, config.exclude or {})
+    targets = vim.tbl_filter(function(t)
+        return not vim.tbl_contains(excluded, t.target)
+    end, targets)
+
     return targets, vim.fn.fnamemodify(path, ":h")
 end
 

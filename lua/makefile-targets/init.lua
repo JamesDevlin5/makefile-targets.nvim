@@ -7,6 +7,7 @@ local M = {}
 ---@field desc_prefix? string Comment prefix used to identify target descriptions
 ---@field make_cmd? string The make executable to invoke (e.g. "make", "gmake")
 ---@field make_args? string Extra arguments appended after the executable and before the target
+---@field exclude? string[] List of target names to hide from the picker
 
 --- Default Config
 M.config = {
@@ -20,6 +21,8 @@ M.config = {
     make_cmd = "make",
     -- Extra arguments passed to make before the target (e.g. "-j4", "-n")
     make_args = "",
+    -- Targets to hide from the picker
+    exclude = {},
 }
 
 --- Setup Function
