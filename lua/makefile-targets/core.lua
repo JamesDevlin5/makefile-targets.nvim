@@ -126,11 +126,25 @@ local function parse_targets()
                 end
             end
 
-            table.insert(targets, { target = target, desc = desc, recipe = recipe })
+            table.insert(targets, { target = name, desc = desc, recipe = recipe })
         end
     end
 
     return targets, vim.fn.fnamemodify(path, ":h")
+end
+
+--- Merge two make argument strings, deduplicating and trimming whitespace.
+---@param base string
+---@param extra string
+---@return string
+function M.merge_args(base, extra)
+    if base == "" then
+        return extra
+    end
+    if extra == "" then
+        return base
+    end
+    return base .. " " .. extra
 end
 
 --- Run a Makefile target in a terminal split.
