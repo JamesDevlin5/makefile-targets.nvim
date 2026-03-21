@@ -134,7 +134,7 @@ function M.pick_target()
         prompt = "Make target:",
         format_item = function(item)
             if item.desc then
-                return item.target .. " " .. item.target
+                return item.target .. " - " .. item.desc
             end
             return item.target
         end,

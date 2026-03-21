@@ -126,17 +126,20 @@ end)
 
 describe("target descriptions", function()
     local captured
+    local captured_format_item
     local notified
 
     before_each(function()
         captured = nil
+        captured_format_item = nil
         notified = {}
         package.loaded["makefile-targets"] = nil
         package.loaded["makefile-targets.core"] = nil
         require("makefile-targets").setup({ finders = { "buffer" } })
         ---@diagnostic disable-next-line: duplicate-set-field
-        vim.ui.select = function(items, _, _)
+        vim.ui.select = function(items, opts, _)
             captured = items
+            captured_format_item = opts.format_item
         end
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.notify = function(msg, _)
@@ -234,6 +237,43 @@ describe("target descriptions", function()
         assert.is_not_nil(build)
         assert.is_nil(build and build.desc)
     end)
+
+    it("format_item shows target and description when desc is present", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "## Build the project",
+                "build: src/main.c",
+                "\tgcc -o build src/main.c",
+            }, "\n")
+        )
+
+        require("makefile-targets").config.makefile_name = "Makefile"
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local build = find_target(captured, "build")
+        assert.is_not_nil(captured_format_item)
+        assert.are.equal("build - Build the project", captured_format_item(build))
+    end)
+
+    it("format_item shows only target name when desc is nil", function()
+        local _, dir = write_tmp(
+            "Makefile",
+            table.concat({
+                "build: src/main.c",
+                "\tgcc -o build src/main.c",
+            }, "\n")
+        )
+
+        require("makefile-targets").config.makefile_name = "Makefile"
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+        require("makefile-targets.core").pick_target()
+
+        local build = find_target(captured, "build")
+        assert.is_not_nil(captured_format_item)
+        assert.are.equal("build", captured_format_item(build))
+    end)
 end)
 
 describe("get_search_root() git fallback", function()
@@ -275,7 +315,6 @@ describe("get_search_root() git fallback", function()
             return orig_vim_system(cmd, _opts)
         end
 
-        -- Buffer is somewhere unrelated — root must come from git stub
         vim.api.nvim_buf_set_name(0, "/tmp/unrelated/fake.c")
         require("makefile-targets").config.makefile_name = "Makefile"
         require("makefile-targets.core").pick_target()
@@ -322,7 +361,6 @@ describe("finders config", function()
         end
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.notify = function(_, _) end
-        -- Reset modules so config changes take effect cleanly
         package.loaded["makefile-targets"] = nil
         package.loaded["makefile-targets.core"] = nil
     end)
@@ -350,7 +388,6 @@ describe("finders config", function()
             return orig_vim_system(cmd, _opts)
         end
 
-        -- buffer finder should win because it's listed first
         vim.api.nvim_buf_set_name(0, buffer_root .. "/fake.c")
         require("makefile-targets").setup({ finders = { "buffer", "git" } })
         require("makefile-targets.core").pick_target()
