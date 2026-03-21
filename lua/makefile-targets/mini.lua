@@ -23,7 +23,7 @@ function M.pick_target(opts)
     assert(dir, "makefile-targets: dir should not be nil when targets were found")
 
     local make_args = (opts and opts.make_args ~= nil) and opts.make_args or config.make_args
-    local dry_run = make_args == "-n"
+    local dry_run = make_args:find("-n") ~= nil
 
     local function prompt_title()
         return dry_run and "Make target  [dry run: on]" or "Make target"
@@ -69,7 +69,7 @@ function M.pick_target(opts)
                 if not item then
                     return
                 end
-                local args = dry_run and "-n" or config.make_args
+                local args = dry_run and core.merge_args("-n", make_args) or make_args
                 core.run_target(item.data.target, dir, args)
             end,
         },

@@ -7,8 +7,52 @@ Pick and run `make` targets.
 **lazy.nvim**
 ```lua
 {
-  "JamesDevlin5/makefile-targets.nvim",
-  opts = {},
+    "JamesDevlin5/makefile-targets.nvim",
+    dependencies = {
+        -- If you use telescope
+        "nvim-telescope/telescope.nvim",
+        -- If you use mini.pick
+        "echasnovski/mini.pick",
+        -- Or if you use the entire mini suite
+        "nvim-mini/mini.nvim",
+    },
+    ---@type MakefileTargetsOpts
+    opts = {
+        make_args = "-j4",
+    },
+    keys = {
+        {
+            "<Leader>m",
+            function()
+                require("makefile-targets.core").pick_target()
+            end,
+            desc = "Make: pick target",
+        },
+        -- Example using extra arguments to the `make` invocation
+        {
+            "<Leader>M",
+            function()
+                require("makefile-targets.core").pick_target { make_args = "-n" }
+            end,
+            desc = "Make: pick target (dry run)",
+        },
+        -- Use telescope
+        {
+            "<Leader>mt",
+            function()
+                require("makefile-targets.telescope").pick_target()
+            end,
+            desc = "Make: pick target (Telescope)",
+        },
+        -- Use mini
+        {
+            "<Leader>mm",
+            function()
+                require("makefile-targets.mini").pick_target()
+            end,
+            desc = "Make: pick target (Mini.pick)",
+        },
+    },
 }
 ```
 
@@ -35,12 +79,11 @@ clean:
 
 ```lua
 require("makefile-targets").setup({
-  keymap         = "<Leader>m",  -- false to disable
-  makefile_name  = "Makefile",
-  desc_prefix    = "##",
-  make_cmd       = "make",
-  make_args      = "",
-  finders        = { "lsp", "git", "buffer", "cwd" },
+    makefile_name  = "Makefile",
+    desc_prefix    = "##",
+    make_cmd       = "make",
+    make_args      = "",
+    finders        = { "lsp", "git", "buffer", "cwd" },
 })
 ```
 
@@ -51,9 +94,23 @@ require("makefile-targets").setup({
 Add a separate keymap that runs `make -n <target>` (prints commands without executing):
 
 ```lua
-require("makefile-targets").setup({
-  dry_run_keymap = "<Leader>M",
-})
+{
+    "JamesDevlin5/makefile-targets.nvim",
+    keys = {
+        {
+            "<Leader>m",
+            function() require("makefile-targets.core").pick_target() end,
+            desc = "Make: pick target"
+        },
+        {
+            "<Leader>M",
+            function() require("makefile-targets.core").pick_target({ make_args = "-n" }) end,
+            desc = "Make: pick target (dry run)"
+        },
+    },
+    ---@type MakefileTargetsOpts
+    opts = {},
+}
 ```
 
 ### Telescope picker
@@ -63,11 +120,17 @@ picker with `<C-d>` to toggle dry run mode inline:
 
 ```lua
 {
-  "JamesDevlin5/makefile-targets.nvim",
-  dependencies = { "nvim-telescope/telescope.nvim" },
-  opts = {
-    telescope_keymap = "<Leader>mt",
-  },
+    "JamesDevlin5/makefile-targets.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+    keys = {
+        {
+            "<Leader>mt",
+            function() require("makefile-targets.telescope").pick_target() end,
+            desc = "Make: pick target (Telescope)"
+        },
+    },
+    ---@type MakefileTargetsOpts
+    opts = {},
 }
 ```
 
@@ -78,16 +141,22 @@ picker with `<C-d>` to toggle dry run mode inline:
 
 ### Mini.pick picker
 
-[mini.pick](https://github.com/echasnovski/mini.pick) picker with the same
+A [mini.pick](https://github.com/echasnovski/mini.pick) picker with the same
 `<C-d>` dry run toggle:
 
 ```lua
 {
-  "JamesDevlin5/makefile-targets.nvim",
-  dependencies = { "echasnovski/mini.pick" },
-  opts = {
-    mini_keymap = "<Leader>mm",
-  },
+    "JamesDevlin5/makefile-targets.nvim",
+    dependencies = { "echasnovski/mini.pick" },
+    keys = {
+        {
+            "<Leader>mm",
+            function() require("makefile-targets.mini").pick_target() end,
+            desc = "Make: pick target (Mini.pick)"
+        },
+    },
+    ---@type MakefileTargetsOpts
+    opts = {},
 }
 ```
 
