@@ -12,11 +12,12 @@ SETUP                                               *makefile-targets-setup*
 Call `setup()` somewhere in your Neovim config: >lua
 
   require("makefile-targets").setup({
-    keymap        = "<Leader>m",
-    makefile_name = "Makefile",
-    finders       = { "lsp", "git", "buffer", "cwd" },
-    desc_prefix   = "##",
-    dry_run       = false,
+    keymap          = "<Leader>m",
+    dry_run_keymap  = false,
+    makefile_name   = "Makefile",
+    finders         = { "lsp", "git", "buffer", "cwd" },
+    desc_prefix     = "##",
+    dry_run         = false,
   })
 <
 
@@ -34,6 +35,15 @@ All options and their defaults:
   keymap          "<Leader>m"               Normal-mode keymap for the picker.
                                             Set to `false` to skip registering
                                             one.
+
+  dry_run_keymap  false                     Normal-mode keymap that opens the
+                                            picker in dry run mode, running
+                                            `make -n` instead of `make`.
+                                            Set to `false` to disable. >lua
+  require("makefile-targets").setup({
+    dry_run_keymap = false,
+  })
+<
 
   makefile_name   "Makefile"                Filename to search for, walked
                                             upward from the resolved root.

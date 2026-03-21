@@ -45,4 +45,30 @@ describe("setup()", function()
 
         assert.is_true(type(mapping) == "table" and mapping.lhs ~= nil)
     end)
+
+    it("registers a dry_run_keymap when dry_run_keymap is a string", function()
+        local plugin = require("makefile-targets")
+        plugin.setup({ dry_run_keymap = "<leader>mK" })
+
+        local mapping = vim.fn.maparg("<leader>mK", "n", false, true)
+
+        assert.is_true(type(mapping) == "table" and mapping.lhs ~= nil)
+    end)
+
+    it("accepts dry_run_keymap = false to skip registration", function()
+        local plugin = require("makefile-targets")
+
+        assert.has_no_error(function()
+            plugin.setup({ dry_run_keymap = false })
+        end)
+
+        assert.are.equal(false, plugin.config.dry_run_keymap)
+    end)
+
+    it("applies default dry_run_keymap when called with no args", function()
+        local plugin = require("makefile-targets")
+        plugin.setup()
+
+        assert.are.equal(false, plugin.config.dry_run_keymap)
+    end)
 end)
