@@ -2,15 +2,15 @@
 local M = {}
 
 ---@class MakefileTargetsOpts
----@field keymap string|false Normal-mode keymap for the picker, or false to disable
----@field dry_run_keymap string|false Normal-mode keymap for the dry run picker, or false to disable
----@field telescope_keymap string|false Normal-mode keymap for the Telescope picker, or false to disable
----@field mini_keymap string|false Normal-mode keymap for the Mini.pick picker, or false to disable
----@field makefile_name string Filename to search for
----@field finders string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
----@field desc_prefix string Comment prefix used to identify target descriptions
----@field make_cmd string The make executable to invoke (e.g. "make", "gmake")
----@field make_args string Extra arguments appended after the executable and before the target
+---@field keymap? string|false Normal-mode keymap for the picker, or false to disable
+---@field dry_run_keymap? string|false Normal-mode keymap for the dry run picker, or false to disable
+---@field telescope_keymap? string|false Normal-mode keymap for the Telescope picker, or false to disable
+---@field mini_keymap? string|false Normal-mode keymap for the Mini.pick picker, or false to disable
+---@field makefile_name? string Filename to search for
+---@field finders? string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
+---@field desc_prefix? string Comment prefix used to identify target descriptions
+---@field make_cmd? string The make executable to invoke (e.g. "make", "gmake")
+---@field make_args? string Extra arguments appended after the executable and before the target
 
 --- Default Config
 M.config = {
