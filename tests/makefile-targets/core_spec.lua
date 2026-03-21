@@ -316,11 +316,12 @@ describe("make_cmd and make_args", function()
         package.loaded["makefile-targets"] = nil
         package.loaded["makefile-targets.core"] = nil
         ---@diagnostic disable-next-line: duplicate-set-field
-        vim.fn.jobstart = function(cmd, _opts)
+        vim.fn.jobstart = function(cmd, _)
             last_cmd = cmd
         end
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.cmd = function(_) end
+        ---@diagnostic disable-next-line: duplicate-set-field
         vim.api.nvim_buf_set_name = function(_, name)
             last_buf_name = name
         end
@@ -342,7 +343,8 @@ describe("make_cmd and make_args", function()
         )
         orig_buf_set_name(0, dir .. "/fake.c")
         local orig_select = vim.ui.select
-        vim.ui.select = function(items, _opts, cb)
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
             cb(items[1])
         end
         require("makefile-targets.core").pick_target(pick_opts)
