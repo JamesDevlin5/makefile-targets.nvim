@@ -91,7 +91,7 @@ function M.pick_target(opts)
                     actions.close(prompt_bufnr)
                     local selection = action_state.get_selected_entry()
                     if selection then
-                        local args = dry_run and "-n" or config.make_args
+                        local args = dry_run and "-n" or make_args
                         core.run_target(selection.value.target, dir, args)
                     end
                 end)

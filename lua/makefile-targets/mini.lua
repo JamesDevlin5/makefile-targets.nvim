@@ -69,7 +69,7 @@ function M.pick_target(opts)
                 if not item then
                     return
                 end
-                local args = dry_run and "-n" or config.make_args
+                local args = dry_run and "-n" or make_args
                 core.run_target(item.data.target, dir, args)
             end,
         },
