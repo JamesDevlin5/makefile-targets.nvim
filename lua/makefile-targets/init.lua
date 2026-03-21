@@ -1,3 +1,4 @@
+---@module "makefile-targets"
 local M = {}
 
 ---@class MakefileTargetsOpts
