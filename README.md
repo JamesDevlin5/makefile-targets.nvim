@@ -8,7 +8,6 @@ Pick and run `make` targets.
 ```lua
 {
   "JamesDevlin5/makefile-targets.nvim",
-  ---@type MakefileTargetsOpts
   opts = {},
 }
 ```
@@ -17,18 +16,90 @@ Pick and run `make` targets.
 
 | Method | Action |
 |---|---|
-| `<leader>m` (default) | Open the target picker |
+| `<Leader>m` | Open the target picker |
 | `:MakefileTargets` | Same, via command |
 
-Selecting a target runs `make <target>`.
+Selecting a target runs `make <target>` in a terminal split at the bottom of the screen. Targets with a `##` comment on the line above them will show their description in the picker.
+
+```makefile
+## Build the project
+build: src/main.c
+	gcc -o build src/main.c
+
+## Remove build artifacts
+clean:
+	rm -f build
+```
 
 ## Configuration
 
 ```lua
 require("makefile-targets").setup({
-  keymap        = "<leader>m",                       -- false to disable
-  makefile_name = "Makefile",                        -- looked up relative to cwd
-  finders       = { "lsp", "git", "buffer", "cwd" }, -- Order in which root finders are tried
+  keymap         = "<Leader>m",  -- false to disable
+  makefile_name  = "Makefile",
+  desc_prefix    = "##",
+  make_cmd       = "make",
+  make_args      = "",
+  finders        = { "lsp", "git", "buffer", "cwd" },
 })
+```
+
+## Optional features
+
+### Dry run keymap
+
+Add a separate keymap that runs `make -n <target>` (prints commands without executing):
+
+```lua
+require("makefile-targets").setup({
+  dry_run_keymap = "<Leader>M",
+})
+```
+
+### Telescope picker
+
+[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+picker with `<C-d>` to toggle dry run mode inline:
+
+```lua
+{
+  "JamesDevlin5/makefile-targets.nvim",
+  dependencies = { "nvim-telescope/telescope.nvim" },
+  opts = {
+    telescope_keymap = "<Leader>mt",
+  },
+}
+```
+
+| Key | Action |
+|---|---|
+| `<CR>` | Run the selected target |
+| `<C-d>` | Toggle dry run mode |
+
+### Mini.pick picker
+
+[mini.pick](https://github.com/echasnovski/mini.pick) picker with the same
+`<C-d>` dry run toggle:
+
+```lua
+{
+  "JamesDevlin5/makefile-targets.nvim",
+  dependencies = { "echasnovski/mini.pick" },
+  opts = {
+    mini_keymap = "<Leader>mm",
+  },
+}
+```
+
+| Key | Action |
+|---|---|
+| `<CR>` | Run the selected target |
+| `<C-d>` | Toggle dry run mode |
+
+You can also call either picker directly without a keymap:
+
+```lua
+require("makefile-targets.telescope").pick_target()
+require("makefile-targets.mini").pick_target()
 ```
 

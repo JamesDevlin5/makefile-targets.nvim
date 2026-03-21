@@ -300,7 +300,98 @@ describe("target descriptions", function()
     end)
 end)
 
-describe("get_search_root() git fallback", function()
+describe("make_cmd and make_args", function()
+    local last_cmd
+    local last_buf_name
+    local orig_jobstart
+    local orig_cmd
+    local orig_buf_set_name
+
+    before_each(function()
+        last_cmd = nil
+        last_buf_name = nil
+        orig_jobstart = vim.fn.jobstart
+        orig_cmd = vim.cmd
+        orig_buf_set_name = vim.api.nvim_buf_set_name
+        package.loaded["makefile-targets"] = nil
+        package.loaded["makefile-targets.core"] = nil
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.fn.jobstart = function(cmd, _opts)
+            last_cmd = cmd
+        end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.cmd = function(_) end
+        vim.api.nvim_buf_set_name = function(_, name)
+            last_buf_name = name
+        end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.notify = function(_, _) end
+    end)
+
+    after_each(function()
+        vim.fn.jobstart = orig_jobstart
+        vim.cmd = orig_cmd
+        vim.api.nvim_buf_set_name = orig_buf_set_name
+        vim.notify = nil
+    end)
+
+    local function run_with(config_opts, pick_opts)
+        local _, dir = write_tmp("Makefile", "build:\n\techo build\n")
+        require("makefile-targets").setup(
+            vim.tbl_extend("force", { finders = { "buffer" } }, config_opts or {})
+        )
+        orig_buf_set_name(0, dir .. "/fake.c")
+        local orig_select = vim.ui.select
+        vim.ui.select = function(items, _opts, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target(pick_opts)
+        vim.ui.select = orig_select
+    end
+
+    it("runs make <target> with no extra args by default", function()
+        run_with({})
+        assert.are.equal("make build", last_cmd)
+    end)
+
+    it("prepends make_args from config before the target", function()
+        run_with({ make_args = "-j4" })
+        assert.are.equal("make -j4 build", last_cmd)
+    end)
+
+    it("uses make_args passed directly to pick_target", function()
+        run_with({}, { make_args = "-n" })
+        assert.are.equal("make -n build", last_cmd)
+    end)
+
+    it("pick_target make_args overrides config make_args", function()
+        run_with({ make_args = "-j4" }, { make_args = "-n" })
+        assert.are.equal("make -n build", last_cmd)
+    end)
+
+    it("uses a custom make_cmd", function()
+        run_with({ make_cmd = "gmake" })
+        assert.are.equal("gmake build", last_cmd)
+    end)
+
+    it("combines custom make_cmd with make_args", function()
+        run_with({ make_cmd = "gmake", make_args = "-j4" })
+        assert.are.equal("gmake -j4 build", last_cmd)
+    end)
+
+    it("includes make_args in the buffer name label", function()
+        run_with({}, { make_args = "-n" })
+        assert.is_not_nil(last_buf_name)
+        assert.is_truthy(last_buf_name and last_buf_name:find("%[-n%]"))
+    end)
+
+    it("omits extra label in buffer name when make_args is empty", function()
+        run_with({})
+        assert.are.equal("make:build", last_buf_name)
+    end)
+end)
+
+describe("git_search_root() git fallback", function()
     local captured
     local orig_vim_system
 
@@ -372,7 +463,6 @@ end)
 describe("finders config", function()
     local captured
     local orig_vim_system
-
     local orig_cwd
 
     before_each(function()

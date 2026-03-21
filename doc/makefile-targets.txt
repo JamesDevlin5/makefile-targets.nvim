@@ -12,10 +12,13 @@ SETUP                                               *makefile-targets-setup*
 Call `setup()` somewhere in your Neovim config: >lua
 
   require("makefile-targets").setup({
-    keymap        = "<Leader>m",
-    makefile_name = "Makefile",
-    finders       = { "lsp", "git", "buffer", "cwd" },
-    desc_prefix   = "##",
+    keymap          = "<Leader>m",
+    dry_run_keymap  = false,
+    makefile_name   = "Makefile",
+    finders         = { "lsp", "git", "buffer", "cwd" },
+    desc_prefix     = "##",
+    make_cmd        = "make",
+    make_args       = "",
   })
 <
 
@@ -33,6 +36,39 @@ All options and their defaults:
   keymap          "<Leader>m"               Normal-mode keymap for the picker.
                                             Set to `false` to skip registering
                                             one.
+
+  dry_run_keymap  false                     Normal-mode keymap that opens the
+                                            picker in dry run mode, running
+                                            `make -n` instead of `make`.
+                                            Set to `false` to disable. >lua
+  require("makefile-targets").setup({
+    dry_run_keymap = false,
+  })
+<
+
+  telescope_keymap false                    Normal-mode keymap that opens the
+                                            Telescope picker. Requires
+                                            telescope.nvim. Set to `false` to
+                                            disable. >lua
+  require("makefile-targets").setup({
+    telescope_keymap = "<Leader>mt",
+  })
+<
+                                            Inside the Telescope picker:
+                                            <CR>   run the selected target
+                                            <C-d>  toggle dry run mode
+
+  mini_keymap     false                     Normal-mode keymap that opens the
+                                            Mini.pick picker. Requires
+                                            mini.pick. Set to `false` to
+                                            disable. >lua
+  require("makefile-targets").setup({
+    mini_keymap = "<Leader>mm",
+  })
+<
+                                            Inside the Mini.pick picker:
+                                            <CR>   run the selected target
+                                            <C-d>  toggle dry run mode
 
   makefile_name   "Makefile"                Filename to search for, walked
                                             upward from the resolved root.
@@ -57,7 +93,7 @@ All options and their defaults:
   })
 <
 
-    desc_prefix     "##"                      Comment prefix on the line directly
+  desc_prefix     "##"                      Comment prefix on the line directly
                                             above a target that is shown as its
                                             description in the picker: >makefile
   ## Build the project
@@ -68,6 +104,25 @@ All options and their defaults:
   require("makefile-targets").setup({
     desc_prefix = "#",
   })
+<
+
+  make_cmd        "make"                    The make executable to invoke.
+                                            Change to use an alternative: >lua
+  require("makefile-targets").setup({
+    make_cmd = "gmake",
+  })
+<
+
+  make_args       ""                        Extra arguments inserted between
+                                            the executable and the target,
+                                            applied to every run: >lua
+  require("makefile-targets").setup({
+    make_args = "-j4",
+  })
+<
+                                            Override per-call via pick_target()
+                                            (the dry_run_keymap uses this): >lua
+  require("makefile-targets.core").pick_target({ make_args = "-n" })
 <
 
 ==============================================================================

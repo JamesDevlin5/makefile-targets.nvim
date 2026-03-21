@@ -121,16 +121,36 @@ end
 --- Run a Makefile target in a terminal split.
 ---@param target string The target name to run
 ---@param dir string The directory containing the Makefile
-local function run_target(target, dir)
+---@param make_args string Extra arguments to pass to make (e.g. "-n", "-j4")
+function M.run_target(target, dir, make_args)
+    local config = require("makefile-targets").config
+    local args = make_args ~= "" and make_args .. " " or ""
+    local cmd = config.make_cmd .. " " .. args .. target
+    local label = make_args ~= "" and "make:" .. target .. " [" .. make_args .. "]"
+        or "make:" .. target
     vim.cmd("botright new")
-    vim.fn.jobstart("make " .. target, { term = true, cwd = dir })
-    vim.api.nvim_buf_set_name(0, "make:" .. target)
+    vim.fn.jobstart(cmd, { term = true, cwd = dir })
+    vim.api.nvim_buf_set_name(0, label)
     vim.cmd("startinsert")
 end
 
+--- Parse targets from the Makefile, exposed for use by pickers.
+---@return MakefileTarget[] targets
+---@return string|nil dir
+function M.parse_targets()
+    return parse_targets()
+end
+
+--- Options for pick_target.
+---@class PickTargetOpts
+---@field make_args string|nil Extra args to pass to make, overrides config.make_args
+
 --- Open a picker showing available Makefile targets.
---- Selecting one runs it via `make <target>` in a terminal split.
-function M.pick_target()
+--- Selecting one runs it via `make [make_args] <target>` in a terminal split.
+---@param opts PickTargetOpts|nil
+function M.pick_target(opts)
+    local config = require("makefile-targets").config
+    local make_args = (opts and opts.make_args ~= nil) and opts.make_args or config.make_args
     local targets, dir = parse_targets()
 
     if #targets == 0 then
@@ -149,7 +169,7 @@ function M.pick_target()
     }, function(choice)
         if choice then
             assert(dir, "makefile-targets: dir should not be nil when targets were found")
-            run_target(choice.target, dir)
+            M.run_target(choice.target, dir, make_args)
         end
     end)
 end
