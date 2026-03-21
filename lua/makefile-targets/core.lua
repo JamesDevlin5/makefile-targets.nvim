@@ -17,9 +17,9 @@ local finders = {
     end,
 
     git = function()
-        local result = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
-        if vim.v.shell_error == 0 and result and result ~= "" then
-            return result
+        local result = vim.system({ "git", "rev-parse", "--show-toplevel" }, { text = true }):wait()
+        if result.code == 0 and result.stdout and result.stdout ~= "" then
+            return vim.trim(result.stdout)
         end
     end,
 
@@ -67,10 +67,15 @@ local function find_makefile(start_dir, filename)
     return results[1]
 end
 
+--- A parsed Makefile target.
+---@class MakefileTarget
+---@field target string The target name
+---@field desc string|nil Description from the commend above the target
+
 --- Find and parse targets from a Makefile.
 --- A target line looks like:  `my-target:` or `my-target: dep1 dep2`
 --- Lines starting with `.` (like .PHONY) are excluded.
----@return string[] targets
+---@return MakefileTarget[] targets
 ---@return string|nil dir Directory containing the Makefile, or nil if not found
 local function parse_targets()
     local config = require("makefile-targets").config
@@ -86,11 +91,19 @@ local function parse_targets()
     end
 
     local targets = {}
-    for _, line in ipairs(vim.fn.readfile(path)) do
+    local lines = vim.fn.readfile(path)
+    local prefix = vim.pesc(config.desc_prefix)
+
+    for i, line in ipairs(lines) do
         -- Match lines like "target-name:" that don't start with a tab or dot
         local target = line:match("^([%w][%w%-_]*):")
         if target then
-            table.insert(targets, target)
+            -- Description comment on preceding line
+            local desc = nil
+            if i > 1 then
+                desc = lines[i - 1]:match("^" .. prefix .. "%s*(.*)")
+            end
+            table.insert(targets, { target = target, desc = desc })
         end
     end
 
@@ -119,10 +132,16 @@ function M.pick_target()
 
     vim.ui.select(targets, {
         prompt = "Make target:",
+        format_item = function(item)
+            if item.desc then
+                return item.target .. " " .. item.target
+            end
+            return item.target
+        end,
     }, function(choice)
         if choice then
             assert(dir, "makefile-targets: dir should not be nil when targets were found")
-            run_target(choice, dir)
+            run_target(choice.target, dir)
         end
     end)
 end
