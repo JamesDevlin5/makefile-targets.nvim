@@ -15,6 +15,7 @@ Call `setup()` somewhere in your Neovim config: >lua
     keymap        = "<Leader>m",
     makefile_name = "Makefile",
     finders       = { "lsp", "git", "buffer", "cwd" },
+    desc_prefix   = "##",
   })
 <
 
@@ -53,6 +54,19 @@ All options and their defaults:
                                             or reorder to change priority: >lua
   require("makefile-targets").setup({
     finders = { "git", "buffer" },
+  })
+<
+
+    desc_prefix     "##"                      Comment prefix on the line directly
+                                            above a target that is shown as its
+                                            description in the picker: >makefile
+  ## Build the project
+  build: src/main.c
+	gcc -o build src/main.c
+<
+                                            Change to match your convention: >lua
+  require("makefile-targets").setup({
+    desc_prefix = "#",
   })
 <
 

@@ -9,8 +9,7 @@ LUA_FORMATTER_ARGS := --config-path stylua.toml
 JSON_FORMATTER_PATH := python3 -m json.tool
 JSON_FILES          := .releaserc
 
-# Run the full test suite in a headless Neovim instance.
-# Requires nvim to be on your PATH.
+## Run the full test suite in a headless Neovim instance.
 test:
 	@$(NVIM_PATH) \
 	  --headless \
@@ -18,12 +17,13 @@ test:
 	  -u $(MINIMAL_INIT) \
 	  -c "lua require('plenary.test_harness').test_directory('tests/', { minimal_init = '$(MINIMAL_INIT)' })"
 
-# Format all Lua files using the project StyLua config.
+## Format all lua files.
 format:
 	@$(LUA_FORMATTER_PATH) $(LUA_FORMATTER_ARGS) .
 
 JSON_EXTRA_ARGS := $(foreach f,$(JSON_FILES), -o -name "$(f)")
 
+## Format all json files.
 format-json:
 	@for f in $(shell find . \( -name "*.json" $(JSON_EXTRA_ARGS) \) -not -path "./node_modules/*"); do \
 		$(JSON_FORMATTER_PATH) "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \

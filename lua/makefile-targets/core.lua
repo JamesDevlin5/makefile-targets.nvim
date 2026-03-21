@@ -7,7 +7,8 @@ local function notify(msg, level)
     vim.notify("makefile-targets: " .. msg, level)
 end
 
---- Resolve a starting directory for the Makefile search.
+--- Available root finders, keyed by name.
+--- Each returns a string path or nil if it can't resolve a root.
 local finders = {
     lsp = function()
         local clients = vim.lsp.get_clients({ bufnr = 0 })
@@ -17,9 +18,9 @@ local finders = {
     end,
 
     git = function()
-        local result = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
-        if vim.v.shell_error == 0 and result and result ~= "" then
-            return result
+        local result = vim.system({ "git", "rev-parse", "--show-toplevel" }, { text = true }):wait()
+        if result.code == 0 and result.stdout and result.stdout ~= "" then
+            return vim.trim(result.stdout)
         end
     end,
 
@@ -67,10 +68,15 @@ local function find_makefile(start_dir, filename)
     return results[1]
 end
 
+--- A parsed Makefile target.
+---@class MakefileTarget
+---@field target string The target name
+---@field desc string|nil Description from the commend above the target
+
 --- Find and parse targets from a Makefile.
 --- A target line looks like:  `my-target:` or `my-target: dep1 dep2`
 --- Lines starting with `.` (like .PHONY) are excluded.
----@return string[] targets
+---@return MakefileTarget[] targets
 ---@return string|nil dir Directory containing the Makefile, or nil if not found
 local function parse_targets()
     local config = require("makefile-targets").config
@@ -86,11 +92,26 @@ local function parse_targets()
     end
 
     local targets = {}
-    for _, line in ipairs(vim.fn.readfile(path)) do
-        -- Match lines like "target-name:" that don't start with a tab or dot
+    local lines = vim.fn.readfile(path)
+    local prefix = vim.pesc(config.desc_prefix)
+
+    for i, line in ipairs(lines) do
         local target = line:match("^([%w][%w%-_]*):")
         if target then
-            table.insert(targets, target)
+            -- Walk backward collecting all consecutive prefixed comment lines
+            local desc_lines = {}
+            local j = i - 1
+            while j >= 1 do
+                local d = lines[j]:match("^" .. prefix .. "%s*(.*)")
+                if d then
+                    table.insert(desc_lines, 1, d)
+                    j = j - 1
+                else
+                    break
+                end
+            end
+            local desc = #desc_lines > 0 and table.concat(desc_lines, " ") or nil
+            table.insert(targets, { target = target, desc = desc })
         end
     end
 
@@ -119,10 +140,16 @@ function M.pick_target()
 
     vim.ui.select(targets, {
         prompt = "Make target:",
+        format_item = function(item)
+            if item.desc then
+                return item.target .. " - " .. item.desc
+            end
+            return item.target
+        end,
     }, function(choice)
         if choice then
             assert(dir, "makefile-targets: dir should not be nil when targets were found")
-            run_target(choice, dir)
+            run_target(choice.target, dir)
         end
     end)
 end

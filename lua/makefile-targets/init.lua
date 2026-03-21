@@ -4,6 +4,7 @@ local M = {}
 ---@field keymap string|false Normal-mode keymap for the picker, or false to disable
 ---@field makefile_name string Filename to search for
 ---@field finders string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
+---@field desc_prefix string Comment prefix used to identify target descriptions
 
 --- Default Config
 M.config = {
@@ -13,6 +14,8 @@ M.config = {
     makefile_name = "Makefile",
     -- Order in which root finders are tried. Available: "lsp", "git", "buffer", "cwd"
     finders = { "lsp", "git", "buffer", "cwd" },
+    -- Comment prefix used to identify target descriptions
+    desc_prefix = "##",
 }
 
 --- Setup Function
