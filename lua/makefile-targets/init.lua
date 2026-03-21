@@ -5,6 +5,7 @@ local M = {}
 ---@field makefile_name string Filename to search for
 ---@field finders string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
 ---@field desc_prefix string Comment prefix used to identify target descriptions
+---@field dry_run boolean If true, runs `make -n` instead of `make`
 
 --- Default Config
 M.config = {
@@ -16,6 +17,8 @@ M.config = {
     finders = { "lsp", "git", "buffer", "cwd" },
     -- Comment prefix used to identify target descriptions
     desc_prefix = "##",
+    -- If true, runs `make -n <target>` (dry run) instead of executing
+    dry_run = false,
 }
 
 --- Setup Function

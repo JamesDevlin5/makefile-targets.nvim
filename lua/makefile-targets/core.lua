@@ -122,9 +122,11 @@ end
 ---@param target string The target name to run
 ---@param dir string The directory containing the Makefile
 local function run_target(target, dir)
+    local config = require("makefile-targets").config
+    local cmd = config.dry_run and "make -n " .. target or "make " .. target
     vim.cmd("botright new")
-    vim.fn.jobstart("make " .. target, { term = true, cwd = dir })
-    vim.api.nvim_buf_set_name(0, "make:" .. target)
+    vim.fn.jobstart(cmd, { term = true, cwd = dir })
+    vim.api.nvim_buf_set_name(0, "make:" .. target .. (config.dry_run and " [dry run]" or ""))
     vim.cmd("startinsert")
 end
 

@@ -16,6 +16,7 @@ Call `setup()` somewhere in your Neovim config: >lua
     makefile_name = "Makefile",
     finders       = { "lsp", "git", "buffer", "cwd" },
     desc_prefix   = "##",
+    dry_run       = false,
   })
 <
 
@@ -57,7 +58,7 @@ All options and their defaults:
   })
 <
 
-    desc_prefix     "##"                      Comment prefix on the line directly
+  desc_prefix     "##"                      Comment prefix on the line directly
                                             above a target that is shown as its
                                             description in the picker: >makefile
   ## Build the project
@@ -67,6 +68,15 @@ All options and their defaults:
                                             Change to match your convention: >lua
   require("makefile-targets").setup({
     desc_prefix = "#",
+  })
+<
+
+  dry_run         false                     If true, runs `make -n <target>`
+                                            instead of `make <target>`. The
+                                            terminal buffer title will show
+                                            `[dry run]` as a reminder. >lua
+  require("makefile-targets").setup({
+    dry_run = true,
   })
 <
 

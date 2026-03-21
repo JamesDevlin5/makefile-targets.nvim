@@ -300,7 +300,84 @@ describe("target descriptions", function()
     end)
 end)
 
-describe("get_search_root() git fallback", function()
+describe("dry_run", function()
+    local last_cmd
+    local last_buf_name
+    local orig_jobstart
+    local orig_cmd
+    local orig_buf_set_name
+
+    before_each(function()
+        last_cmd = nil
+        last_buf_name = nil
+        orig_jobstart = vim.fn.jobstart
+        orig_cmd = vim.cmd
+        orig_buf_set_name = vim.api.nvim_buf_set_name
+        package.loaded["makefile-targets"] = nil
+        package.loaded["makefile-targets.core"] = nil
+        -- Stub jobstart to capture the command
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.fn.jobstart = function(cmd, _opts)
+            last_cmd = cmd
+        end
+        -- Suppress botright/startinsert
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.cmd = function(_) end
+        -- Stub nvim_buf_set_name to capture the buffer name
+        vim.api.nvim_buf_set_name = function(_, name)
+            last_buf_name = name
+        end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.notify = function(_, _) end
+    end)
+
+    after_each(function()
+        vim.fn.jobstart = orig_jobstart
+        vim.cmd = orig_cmd
+        vim.api.nvim_buf_set_name = orig_buf_set_name
+        vim.notify = nil
+    end)
+
+    local function run_with(opts)
+        local _, dir = write_tmp("Makefile", "build:\n\techo build\n")
+        require("makefile-targets").setup(vim.tbl_extend("force", { finders = { "buffer" } }, opts))
+        vim.api.nvim_buf_set_name(0, dir .. "/fake.c")
+
+        -- Bypass the picker and call run_target indirectly via pick_target
+        local orig_select = vim.ui.select
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target()
+        vim.ui.select = orig_select
+    end
+
+    it("runs make <target> when dry_run is false", function()
+        run_with({ dry_run = false })
+        assert.are.equal("make build", last_cmd)
+    end)
+
+    it("runs make -n <target> when dry_run is true", function()
+        run_with({ dry_run = true })
+        assert.are.equal("make -n build", last_cmd)
+    end)
+
+    it("includes [dry run] in the buffer name when dry_run is true", function()
+        run_with({ dry_run = true })
+        assert.is_not_nil(last_buf_name)
+        assert.is_truthy(last_buf_name and last_buf_name:find("%[dry run%]"))
+    end)
+
+    it("does not include [dry run] in the buffer name when dry_run is false", function()
+        run_with({ dry_run = false })
+        if last_buf_name then
+            assert.is_falsy(last_buf_name:find("%[dry run%]"))
+        end
+    end)
+end)
+
+describe("git_search_root() git fallback", function()
     local captured
     local orig_vim_system
 
@@ -372,7 +449,6 @@ end)
 describe("finders config", function()
     local captured
     local orig_vim_system
-
     local orig_cwd
 
     before_each(function()
