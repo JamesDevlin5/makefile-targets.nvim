@@ -8,15 +8,51 @@ Pick and run `make` targets.
 ```lua
 {
     "JamesDevlin5/makefile-targets.nvim",
+    dependencies = {
+        -- If you use telescope
+        "nvim-telescope/telescope.nvim",
+        -- If you use mini.pick
+        "echasnovski/mini.pick",
+        -- Or if you use the entire mini suite
+        "nvim-mini/mini.nvim",
+    },
+    ---@type MakefileTargetsOpts
+    opts = {
+        make_args = "-j4",
+    },
     keys = {
         {
             "<Leader>m",
-            function() require("makefile-targets.core").pick_target({ make_args = "-j4" }) end,
-            desc = "Make: pick target"
+            function()
+                require("makefile-targets.core").pick_target()
+            end,
+            desc = "Make: pick target",
+        },
+        -- Example using extra arguments to the `make` invocation
+        {
+            "<Leader>M",
+            function()
+                require("makefile-targets.core").pick_target { make_args = "-n" }
+            end,
+            desc = "Make: pick target (dry run)",
+        },
+        -- Use telescope
+        {
+            "<Leader>mt",
+            function()
+                require("makefile-targets.telescope").pick_target()
+            end,
+            desc = "Make: pick target (Telescope)",
+        },
+        -- Use mini
+        {
+            "<Leader>mm",
+            function()
+                require("makefile-targets.mini").pick_target()
+            end,
+            desc = "Make: pick target (Mini.pick)",
         },
     },
-    ---@type MakefileTargetsOpts
-    opts = {},
 }
 ```
 
