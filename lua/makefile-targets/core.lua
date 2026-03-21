@@ -71,7 +71,8 @@ end
 --- A parsed Makefile target.
 ---@class MakefileTarget
 ---@field target string The target name
----@field desc string|nil Description from the commend above the target
+---@field desc string|nil Description from the comment above the target
+---@field recipe string[] The command lines that make will run for this target
 
 --- Find and parse targets from a Makefile.
 --- A target line looks like:  `my-target:` or `my-target: dep1 dep2`
@@ -111,7 +112,21 @@ local function parse_targets()
                 end
             end
             local desc = #desc_lines > 0 and table.concat(desc_lines, " ") or nil
-            table.insert(targets, { target = target, desc = desc })
+
+            -- Collect recipe lines (tab-indented lines immediately following the target)
+            local recipe = {}
+            local k = i + 1
+            while k <= #lines do
+                local recipe_line = lines[k]:match("^\t(.*)")
+                if recipe_line then
+                    table.insert(recipe, recipe_line)
+                    k = k + 1
+                else
+                    break
+                end
+            end
+
+            table.insert(targets, { target = target, desc = desc, recipe = recipe })
         end
     end
 
