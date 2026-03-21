@@ -46,6 +46,30 @@ All options and their defaults:
   })
 <
 
+  telescope_keymap false                    Normal-mode keymap that opens the
+                                            Telescope picker. Requires
+                                            telescope.nvim. Set to `false` to
+                                            disable. >lua
+  require("makefile-targets").setup({
+    telescope_keymap = "<Leader>mt",
+  })
+<
+                                            Inside the Telescope picker:
+                                            <CR>   run the selected target
+                                            <C-d>  toggle dry run mode
+
+  mini_keymap     false                     Normal-mode keymap that opens the
+                                            Mini.pick picker. Requires
+                                            mini.pick. Set to `false` to
+                                            disable. >lua
+  require("makefile-targets").setup({
+    mini_keymap = "<Leader>mm",
+  })
+<
+                                            Inside the Mini.pick picker:
+                                            <CR>   run the selected target
+                                            <C-d>  toggle dry run mode
+
   makefile_name   "Makefile"                Filename to search for, walked
                                             upward from the resolved root.
 

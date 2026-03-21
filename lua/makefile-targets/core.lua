@@ -122,7 +122,7 @@ end
 ---@param target string The target name to run
 ---@param dir string The directory containing the Makefile
 ---@param make_args string Extra arguments to pass to make (e.g. "-n", "-j4")
-local function run_target(target, dir, make_args)
+function M.run_target(target, dir, make_args)
     local config = require("makefile-targets").config
     local args = make_args ~= "" and make_args .. " " or ""
     local cmd = config.make_cmd .. " " .. args .. target
@@ -132,6 +132,13 @@ local function run_target(target, dir, make_args)
     vim.fn.jobstart(cmd, { term = true, cwd = dir })
     vim.api.nvim_buf_set_name(0, label)
     vim.cmd("startinsert")
+end
+
+--- Parse targets from the Makefile, exposed for use by pickers.
+---@return MakefileTarget[] targets
+---@return string|nil dir
+function M.parse_targets()
+    return parse_targets()
 end
 
 --- Options for pick_target.
@@ -162,7 +169,7 @@ function M.pick_target(opts)
     }, function(choice)
         if choice then
             assert(dir, "makefile-targets: dir should not be nil when targets were found")
-            run_target(choice.target, dir, make_args)
+            M.run_target(choice.target, dir, make_args)
         end
     end)
 end
