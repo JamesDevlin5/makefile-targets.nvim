@@ -4,7 +4,6 @@ local assert = require("luassert")
 
 describe("setup()", function()
     before_each(function()
-        -- Reset the module between tests so config changes don't bleed across
         package.loaded["makefile-targets"] = nil
     end)
 
@@ -12,63 +11,38 @@ describe("setup()", function()
         local plugin = require("makefile-targets")
         plugin.setup()
 
-        assert.are.equal("<Leader>m", plugin.config.keymap)
         assert.are.equal("Makefile", plugin.config.makefile_name)
+        assert.are.equal("make", plugin.config.make_cmd)
+        assert.are.equal("", plugin.config.make_args)
+        assert.are.equal("##", plugin.config.desc_prefix)
     end)
 
     it("merges user options over defaults", function()
         local plugin = require("makefile-targets")
         plugin.setup({ makefile_name = "GNUmakefile" })
 
-        assert.are.equal("<Leader>m", plugin.config.keymap) -- default preserved
-        assert.are.equal("GNUmakefile", plugin.config.makefile_name) -- override applied
+        assert.are.equal("GNUmakefile", plugin.config.makefile_name)
+        assert.are.equal("make", plugin.config.make_cmd) -- default preserved
     end)
 
-    it("accepts keymap = false to skip keymap registration", function()
+    it("overrides make_cmd", function()
         local plugin = require("makefile-targets")
+        plugin.setup({ make_cmd = "gmake" })
 
-        -- If keymap=false causes an error during setup, this test will fail
-        assert.has_no_error(function()
-            plugin.setup({ keymap = false })
-        end)
-
-        assert.are.equal(false, plugin.config.keymap)
+        assert.are.equal("gmake", plugin.config.make_cmd)
     end)
 
-    it("registers a keymap when keymap is a string", function()
+    it("overrides make_args", function()
         local plugin = require("makefile-targets")
-        plugin.setup({ keymap = "<leader>mk" })
+        plugin.setup({ make_args = "-j4" })
 
-        -- maparg accepts the unexpanded form and returns a non-empty table if the
-        -- mapping exists; an unregistered lhs returns an empty table.
-        local mapping = vim.fn.maparg("<leader>mk", "n", false, true)
-
-        assert.is_true(type(mapping) == "table" and mapping.lhs ~= nil)
+        assert.are.equal("-j4", plugin.config.make_args)
     end)
 
-    it("registers a dry_run_keymap when dry_run_keymap is a string", function()
+    it("overrides finders", function()
         local plugin = require("makefile-targets")
-        plugin.setup({ dry_run_keymap = "<leader>mK" })
+        plugin.setup({ finders = { "buffer", "cwd" } })
 
-        local mapping = vim.fn.maparg("<leader>mK", "n", false, true)
-
-        assert.is_true(type(mapping) == "table" and mapping.lhs ~= nil)
-    end)
-
-    it("accepts dry_run_keymap = false to skip registration", function()
-        local plugin = require("makefile-targets")
-
-        assert.has_no_error(function()
-            plugin.setup({ dry_run_keymap = false })
-        end)
-
-        assert.are.equal(false, plugin.config.dry_run_keymap)
-    end)
-
-    it("applies default dry_run_keymap when called with no args", function()
-        local plugin = require("makefile-targets")
-        plugin.setup()
-
-        assert.are.equal(false, plugin.config.dry_run_keymap)
+        assert.are.same({ "buffer", "cwd" }, plugin.config.finders)
     end)
 end)

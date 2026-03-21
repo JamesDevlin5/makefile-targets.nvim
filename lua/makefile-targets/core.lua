@@ -126,7 +126,7 @@ local function parse_targets()
                 end
             end
 
-            table.insert(targets, { target = name, desc = desc, recipe = recipe })
+            table.insert(targets, { target = target, desc = desc, recipe = recipe })
         end
     end
 
