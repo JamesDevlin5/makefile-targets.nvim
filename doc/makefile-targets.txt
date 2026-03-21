@@ -12,13 +12,12 @@ SETUP                                               *makefile-targets-setup*
 Call `setup()` somewhere in your Neovim config: >lua
 
   require("makefile-targets").setup({
-    keymap          = "<Leader>m",
-    dry_run_keymap  = false,
     makefile_name   = "Makefile",
     finders         = { "lsp", "git", "buffer", "cwd" },
     desc_prefix     = "##",
     make_cmd        = "make",
     make_args       = "",
+    exclude         = {},
   })
 <
 
@@ -27,6 +26,9 @@ COMMANDS                                            *makefile-targets-commands*
 
 :MakefileTargets                                    *:MakefileTargets*
     Open the target picker. Available even without calling setup().
+
+:MakefileTargetsRunLast                             *:MakefileTargetsRunLast*
+    Re-run the last executed target. Notifies if no target has been run yet.
 
 ==============================================================================
 CONFIGURATION                                       *makefile-targets-config*
@@ -123,6 +125,13 @@ All options and their defaults:
                                             Override per-call via pick_target()
                                             (the dry_run_keymap uses this): >lua
   require("makefile-targets.core").pick_target({ make_args = "-n" })
+<
+
+  exclude         {}                        Target names to hide from the
+                                            picker entirely: >lua
+  require("makefile-targets").setup({
+    exclude = { "clean", "distclean" },
+  })
 <
 
 ==============================================================================
