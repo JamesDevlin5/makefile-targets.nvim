@@ -147,6 +147,15 @@ function M.merge_args(base, extra)
     return base .. " " .. extra
 end
 
+--- The last target that was run, stored for re-running.
+---@class LastTarget
+---@field target string
+---@field dir string
+---@field make_args string
+
+---@type LastTarget|nil
+M.last_target = nil
+
 --- Run a Makefile target in a terminal split.
 ---@param target string The target name to run
 ---@param dir string The directory containing the Makefile
@@ -157,10 +166,21 @@ function M.run_target(target, dir, make_args)
     local cmd = config.make_cmd .. " " .. args .. target
     local label = make_args ~= "" and "make:" .. target .. " [" .. make_args .. "]"
         or "make:" .. target
+    M.last_target = { target = target, dir = dir, make_args = make_args }
     vim.cmd("botright new")
     vim.fn.jobstart(cmd, { term = true, cwd = dir })
     vim.api.nvim_buf_set_name(0, label)
     vim.cmd("startinsert")
+end
+
+--- Re-run the last target that was executed.
+--- Does nothing and notifies the user if no target has been run yet.
+function M.run_last_target()
+    if not M.last_target then
+        notify("No target has been run yet", vim.log.levels.INFO)
+        return
+    end
+    M.run_target(M.last_target.target, M.last_target.dir, M.last_target.make_args)
 end
 
 --- Parse targets from the Makefile, exposed for use by pickers.

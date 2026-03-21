@@ -36,6 +36,12 @@ Pick and run `make` targets.
             end,
             desc = "Make: pick target (dry run)",
         },
+        -- Re-run the most recently used `make` target
+        {
+            "<Leader>ml",
+            function() require("makefile-targets.core").run_last_target() end,
+            desc = "Make: re-run last target"
+        },
         -- Use telescope
         {
             "<Leader>mt",
@@ -62,6 +68,7 @@ Pick and run `make` targets.
 |---|---|
 | `<Leader>m` | Open the target picker |
 | `:MakefileTargets` | Same, via command |
+| `:MakefileTargetsRunLast` | Re-run the last executed target |
 
 Selecting a target runs `make <target>` in a terminal split at the bottom of the screen. Targets with a `##` comment on the line above them will show their description in the picker.
 

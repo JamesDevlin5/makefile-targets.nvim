@@ -561,3 +561,121 @@ describe("finders config", function()
         assert.is_true(warned_unknown)
     end)
 end)
+
+describe("run_last_target", function()
+    local last_cmd
+    local orig_jobstart
+    local orig_cmd
+    local orig_buf_set_name
+
+    before_each(function()
+        last_cmd = nil
+        orig_jobstart = vim.fn.jobstart
+        orig_cmd = vim.cmd
+        orig_buf_set_name = vim.api.nvim_buf_set_name
+        package.loaded["makefile-targets"] = nil
+        package.loaded["makefile-targets.core"] = nil
+        require("makefile-targets").setup({ finders = { "buffer" } })
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.fn.jobstart = function(cmd, _)
+            last_cmd = cmd
+        end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.cmd = function(_) end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.api.nvim_buf_set_name = function(_, _) end
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.notify = function(_, _) end
+    end)
+
+    after_each(function()
+        vim.fn.jobstart = orig_jobstart
+        vim.cmd = orig_cmd
+        vim.api.nvim_buf_set_name = orig_buf_set_name
+        vim.notify = nil
+        -- Clear last_target state between tests
+        require("makefile-targets.core").last_target = nil
+    end)
+
+    it("notifies when no target has been run yet", function()
+        local notified = false
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.notify = function(_, level)
+            if level == vim.log.levels.INFO then
+                notified = true
+            end
+        end
+
+        require("makefile-targets.core").run_last_target()
+
+        assert.is_true(notified)
+        assert.is_nil(last_cmd)
+    end)
+
+    it("re-runs the last target with the same args", function()
+        local _, dir = write_tmp("Makefile", "build:\n\techo build\n")
+        orig_buf_set_name(0, dir .. "/fake.c")
+
+        -- Run build once via pick_target
+        local orig_select = vim.ui.select
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target()
+        vim.ui.select = orig_select
+
+        -- Reset captured cmd then re-run
+        last_cmd = nil
+        require("makefile-targets.core").run_last_target()
+
+        assert.are.equal("make build", last_cmd)
+    end)
+
+    it("re-runs with the original make_args", function()
+        local _, dir = write_tmp("Makefile", "test:\n\techo test\n")
+        orig_buf_set_name(0, dir .. "/fake.c")
+
+        local orig_select = vim.ui.select
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target({ make_args = "-n" })
+        vim.ui.select = orig_select
+
+        last_cmd = nil
+        require("makefile-targets.core").run_last_target()
+
+        assert.are.equal("make -n test", last_cmd)
+    end)
+
+    it("stores the most recently run target", function()
+        local _, dir1 = write_tmp("Makefile", "build:\n\techo build\n")
+        local _, dir2 = write_tmp("Makefile", "deploy:\n\techo deploy\n")
+
+        local orig_select = vim.ui.select
+
+        orig_buf_set_name(0, dir1 .. "/fake.c")
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target()
+
+        orig_buf_set_name(0, dir2 .. "/fake.c")
+        package.loaded["makefile-targets.core"] = nil
+        require("makefile-targets").setup({ finders = { "buffer" } })
+        ---@diagnostic disable-next-line: duplicate-set-field
+        vim.ui.select = function(items, _, cb)
+            cb(items[1])
+        end
+        require("makefile-targets.core").pick_target()
+
+        vim.ui.select = orig_select
+        last_cmd = nil
+        require("makefile-targets.core").run_last_target()
+
+        assert.are.equal("make deploy", last_cmd)
+    end)
+end)
