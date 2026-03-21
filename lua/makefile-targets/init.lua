@@ -6,7 +6,8 @@ local M = {}
 ---@field makefile_name string Filename to search for
 ---@field finders string[] Ordered list of root finders: "lsp", "git", "buffer", "cwd"
 ---@field desc_prefix string Comment prefix used to identify target descriptions
----@field dry_run boolean If true, runs `make -n` instead of `make`
+---@field make_cmd string The make executable to invoke (e.g. "make", "gmake")
+---@field make_args string Extra arguments appended after the executable and before the target
 
 --- Default Config
 M.config = {
@@ -20,12 +21,14 @@ M.config = {
     finders = { "lsp", "git", "buffer", "cwd" },
     -- Comment prefix used to identify target descriptions
     desc_prefix = "##",
-    -- If true, runs `make -n <target>` (dry run) instead of executing
-    dry_run = false,
+    -- The make executable to invoke
+    make_cmd = "make",
+    -- Extra arguments passed to make before the target (e.g. "-j4", "-n")
+    make_args = "",
 }
 
 --- Setup Function
----@param opts table|nil Optional config overrides
+---@param opts MakefileTargetsOpts|nil Optional config overrides
 function M.setup(opts)
     M.config = vim.tbl_deep_extend("force", M.config, opts or {})
 
@@ -37,10 +40,7 @@ function M.setup(opts)
 
     if M.config.dry_run_keymap then
         vim.keymap.set("n", M.config.dry_run_keymap, function()
-            local orig = M.config.dry_run
-            M.config.dry_run = true
-            require("makefile-targets.core").pick_target()
-            M.config.dry_run = orig
+            require("makefile-targets.core").pick_target({ make_args = "-n" })
         end, { desc = "Pick a Makefile target (dry run)" })
     end
 end

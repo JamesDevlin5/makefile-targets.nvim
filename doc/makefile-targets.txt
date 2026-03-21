@@ -17,7 +17,8 @@ Call `setup()` somewhere in your Neovim config: >lua
     makefile_name   = "Makefile",
     finders         = { "lsp", "git", "buffer", "cwd" },
     desc_prefix     = "##",
-    dry_run         = false,
+    make_cmd        = "make",
+    make_args       = "",
   })
 <
 
@@ -81,13 +82,23 @@ All options and their defaults:
   })
 <
 
-  dry_run         false                     If true, runs `make -n <target>`
-                                            instead of `make <target>`. The
-                                            terminal buffer title will show
-                                            `[dry run]` as a reminder. >lua
+  make_cmd        "make"                    The make executable to invoke.
+                                            Change to use an alternative: >lua
   require("makefile-targets").setup({
-    dry_run = true,
+    make_cmd = "gmake",
   })
+<
+
+  make_args       ""                        Extra arguments inserted between
+                                            the executable and the target,
+                                            applied to every run: >lua
+  require("makefile-targets").setup({
+    make_args = "-j4",
+  })
+<
+                                            Override per-call via pick_target()
+                                            (the dry_run_keymap uses this): >lua
+  require("makefile-targets.core").pick_target({ make_args = "-n" })
 <
 
 ==============================================================================
