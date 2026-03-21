@@ -94,6 +94,7 @@ picker with `<C-d>` to toggle dry run mode inline:
 | Key | Action |
 |---|---|
 | `<CR>` | Run the selected target |
+| `<Tab>` | Toggle recipe preview |
 | `<C-d>` | Toggle dry run mode |
 
 You can also call either picker directly without a keymap:
