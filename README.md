@@ -6,6 +6,16 @@ Pick and run `make` targets.
 
 **lazy.nvim**
 ```lua
+---Gets the number of processors on the machine
+---@return integer nprocs
+local function get_num_processors()
+    local handle = assert(io.popen("nproc"), "Failed to open `nproc` process")
+    local nproc = assert(handle:read("*n"), "Failed to get processor count") -- read a number directly
+    handle:close()
+
+    return nproc
+end
+
 ---@module "lazy"
 ---@type LazySpec
 {
@@ -25,7 +35,7 @@ Pick and run `make` targets.
     ---@module "makefile-targets"
     ---@type MakefileTargetsOpts
     opts = {
-        make_args = "-j4",
+        make_args = "-j" .. get_num_processors(),
     },
     keys = {
         {
